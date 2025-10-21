@@ -1,0 +1,19 @@
+services:
+
+  mysql:
+    container_name: ticketron-mysql
+    image: mysql:8.0.35
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql:/var/lib/mysql
+      - "./initialisation-DB.sql:/docker-entrypoint-initdb.d/init.sql"
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=${MYSQL_ROOT_PASSWORD}
+      timeout: 10s
+      retries: 10
+
+volumes:
+  mysql:
