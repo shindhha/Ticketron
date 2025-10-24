@@ -1,44 +1,39 @@
 CREATE DATABASE ticketron;
 USE ticketron;
-CREATE TABLE Agent(
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    prompt BLOB NOT NULL,
-    name VARCHAR(50) NOT NULL
+CREATE TABLE categories (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT
 );
-CREATE TABLE Users(
-   id INT AUTO_INCREMENT PRIMARY KEY,
-   email VARCHAR(100) UNIQUE NOT NULL,
-   mot_de_passe VARCHAR(80) NOT NULL,
-   jwt_token BLOB
+
+CREATE TABLE expenses (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    merchant VARCHAR(255),
+    date DATE,
+    total_amount DECIMAL(10,2),
+    vat_amount DECIMAL(10,2),
+    currency VARCHAR(10) DEFAULT 'EUR',
+    category_id BIGINT,
+    description TEXT,
+    payment_method VARCHAR(50),
+    image_path VARCHAR(500),
+    confidence FLOAT,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id)
 );
+
+CREATE TABLE expense_reports (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    employee_id BIGINT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'DRAFT'
+);
+
+ALTER TABLE expenses
+ADD COLUMN report_id BIGINT,
+ADD FOREIGN KEY (report_id) REFERENCES expense_reports(id);
 CREATE USER 'tt-user'@'%' IDENTIFIED BY 'ttuser';
 GRANT ALL PRIVILEGES ON ticketron.* TO 'tt-user'@'%';
 
-INSERT INTO Agent (prompt, name) VALUES
-    ('Tu es un assistant expert en analyse de tickets de caisse pour des notes de frais.
-    On te donne un texte brut issu d''une facture ou d''un ticket (souvent désordonné).
-    Tu dois produire UNE PHRASE SYNTHÉTIQUE, lisible et homogène.
-
-    Format attendu :
-    "Achat <type_depense> – <date> à <heure> – Total : <montant_total> € (TVA <taux_tva>)"
-
-    Logique de déduction :
-    - Si le texte contient "RESTAURANT", "CAFE", "BRASSERIE", "HIPPOPOTAMUS", "BUFFALO", "QUICK", "MC DONALD",
-      "KFC", "SUBWAY", "BURGER KING", "PIZZA", etc.
-      → type_depense = "repas professionnel"
-    - Si le texte contient "HOTEL", "IBIS", "MERCURE", "CAMPANILE", "BOOKING", etc.
-      → type_depense = "hébergement"
-    - Si le texte contient "TOTAL", "SHELL", "ESSO", "STATION", "CARBURANT", etc.
-      → type_depense = "carburant"
-    - Si le texte contient "SNCF", "AIR", "UBER", "TAXI", "BOLT", "BLABLACAR", "TRAIN", etc.
-      → type_depense = "transport"
-    - Si le texte ne correspond à rien de tout cela, écrire "achat divers".
-
-    Ajustement selon l’heure :
-    - Si l’heure est entre 11h et 14h → dire "déjeuner professionnel"
-    - Si l’heure est entre 19h et 23h → dire "dîner professionnel"
-
-    Règles :
-    - Si une info manque, laisse vide.
-    - N’ajoute pas de texte explicatif.
-    - Retourne uniquement la phrase finale.', 'Olaf');

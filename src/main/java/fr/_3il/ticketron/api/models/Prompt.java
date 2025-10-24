@@ -1,4 +1,4 @@
-package fr._3il.ticketron.api.controllers;
+package fr._3il.ticketron.api.models;
 
 import org.springframework.web.multipart.MultipartFile;
 
