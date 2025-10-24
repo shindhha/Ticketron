@@ -1,7 +1,7 @@
 package fr._3il.ticketron.api.controllers;
 
 import fr._3il.ticketron.Ticketron;
-import fr._3il.ticketron.ollama.services.OllamaInvoiceService;
+import fr._3il.ticketron.api.models.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,11 +15,9 @@ import java.nio.file.Paths;
 @RestController
 public class PromptController {
 
-  private OllamaInvoiceService olis;
 
   private Ticketron ticketron;
-  public PromptController(@Autowired OllamaInvoiceService olis, @Autowired Ticketron ticketron) {
-    this.olis = olis;
+  public PromptController(@Autowired Ticketron ticketron) {
     this.ticketron = ticketron;
   }
   @PostMapping("/chat")
@@ -36,7 +34,7 @@ public class PromptController {
       Path filePath = uploadDir.resolve(fileName);
       file.transferTo(filePath.toFile());
 
-      ticketron.processReceipt(filePath.toString(), prompt.instructions);
+      ticketron.processReceiptWithInstruction(filePath.toString(), prompt.instructions);
     }
     return "Tickets reçus et en cours d'analyse.";
   }

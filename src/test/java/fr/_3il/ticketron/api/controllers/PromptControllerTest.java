@@ -1,6 +1,7 @@
 package fr._3il.ticketron.api.controllers;
 
 import fr._3il.ticketron.Ticketron;
+import fr._3il.ticketron.api.models.Prompt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,7 @@ class PromptControllerTest {
     // THEN
     assertNotNull(response);
     assertTrue(response.contains("Tickets reçus"));
-    verify(ticketron, times(1)).processReceipt(anyString(), eq("C'était un repas client"));
+    verify(ticketron, times(1)).processReceiptWithInstruction(anyString(), eq("C'était un repas client"));
 
     // Vérifie qu'un fichier temporaire a bien été créé
     Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"), "ticketron_uploads");
@@ -75,7 +76,7 @@ class PromptControllerTest {
     // WHEN + THEN
     assertThrows(IllegalArgumentException.class, () -> controller.processPrompt(prompt));
 
-    verify(ticketron, never()).processReceipt(anyString(), anyString());
+    verify(ticketron, never()).processReceiptWithInstruction(anyString(), anyString());
   }
 
   // ==============================================================
@@ -97,7 +98,7 @@ class PromptControllerTest {
 
     // THEN
     assertTrue(response.contains("Tickets reçus"));
-    verify(ticketron, times(2)).processReceipt(anyString(), eq("Frais de déplacement"));
+    verify(ticketron, times(2)).processReceiptWithInstruction(anyString(), eq("Frais de déplacement"));
   }
 
   // ==============================================================
@@ -117,6 +118,6 @@ class PromptControllerTest {
 
     // WHEN + THEN
     assertThrows(IOException.class, () -> controller.processPrompt(prompt));
-    verify(ticketron, never()).processReceipt(anyString(), anyString());
+    verify(ticketron, never()).processReceiptWithInstruction(anyString(), anyString());
   }
 }

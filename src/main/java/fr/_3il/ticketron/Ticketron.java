@@ -3,6 +3,8 @@ package fr._3il.ticketron;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Ticketron — Agent IA de gestion des notes de frais.
@@ -11,47 +13,43 @@ import dev.langchain4j.service.UserMessage;
  * interprète les informations extraites et prend des décisions de classement,
  * validation et enregistrement sans que l’utilisateur n’ait à formater les données.
  */
+@SystemMessage("""
+        Tu es Ticketron, un agent spécialisé dans la lecture et l'analyse de tickets de caisse.
+        Tu DOIS utiliser les outils à ta disposition pour analyser les images encodées en Base64.
+        Si une image Base64 est fournie, utilise l'outil `ocrRunBase64(base64Image)` immédiatement.
+        Ne tente pas de la décoder manuellement ni d'appeler d'autres outils.
+    """)
 public interface Ticketron {
 
-  // ============================
-  // CONTEXTE GÉNÉRAL DU MODÈLE
-  // ============================
-  @SystemMessage("""
-        Tu es Ticketron, un agent IA expert en gestion de notes de frais.
-        Ton rôle est de :
-        - Analyser des tickets de caisse fournis sous forme d’image,
-        - Extraire et structurer leurs informations clés,
-        - Classer automatiquement la dépense dans la catégorie appropriée,
-        - Enregistrer les résultats via les outils disponibles.
-
-        Tu disposes d’outils pour :
-        - extraire le texte d’un ticket à partir d’une image (OCR),
-        - enregistrer des dépenses en base,
-        - créer ou retrouver des catégories de dépenses.
-        
-        L’utilisateur peut te donner des directives précises (ex : “classe cela comme hébergement”).
-        Tu dois raisonner et utiliser les outils nécessaires pour accomplir sa demande.
-    """)
-  void initContext();
 
 
   // ============================
   // 1️⃣ TRAITEMENT GLOBAL D'UN TICKET
   // ============================
   @UserMessage("""
-        Voici une image de ticket à traiter : {imagePath}
-        Directives de l’utilisateur : "{userDirectives}"
-        
-        Ton objectif :
-        1. Utiliser l’outil OCR pour lire le contenu du ticket,
-        2. Extraire les données essentielles (date, montant, commerçant, TVA, devise...),
-        3. Classer la dépense selon les catégories connues,
-        4. Enregistrer la dépense en base via l’outil approprié.
-        
-        Tu dois raisonner étape par étape et appeler les outils nécessaires.
-        Ne renvoie pas de texte explicatif, exécute les actions.
-    """)
-  String processReceipt(String imagePath, String userDirectives);
+    Voici le chemin d'une image de ticket à traiter :
+    {{imagePath}}
+
+    Directives de l’utilisateur : "{{userDirectives}}"
+
+    Tu disposes d’un outil nommé `ocrRunFile(imagePath)` 
+    qui sait lire l’image sur le disque et en extraire le texte.
+    Utilise cet outil pour lire le contenu du ticket avant d'analyser la dépense.
+""")
+  String processReceiptWithInstruction(
+          @V("imagePath") String imagePath,
+          @V("userDirectives") String userDirectives
+  );
+
+  @UserMessage("""
+    Voici le chemin d'une image de ticket à traiter :
+    {{imagePath}}
+
+    Tu disposes d’un outil nommé `ocrRunFile(imagePath)` 
+    qui sait lire l’image sur le disque et en extraire le texte.
+    Tu doit utiliser cet outil pour lire le contenu du ticket avant d'analyser la dépense.
+""")
+  String processReceipt(@V("imagePath") String imagePath);
 
 
   // ============================
