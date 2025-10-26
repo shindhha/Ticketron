@@ -56,19 +56,29 @@ public interface Ticketron {
   // 2️⃣ CLASSIFICATION / APPRENTISSAGE
   // ============================
   @UserMessage("""
-        L’utilisateur souhaite que tu analyses cette dépense : {expenseSummary}
-        et que tu l’associes à une catégorie.
+        L’utilisateur souhaite que tu analyses cette dépense : {{expenseSummary}}
+        et que y associe une ou plusieur catégorie.
+        Tu disposes d'une liste de catégories accessible via outil.
         Si aucune catégorie existante ne correspond, tu peux créer une nouvelle catégorie
         via l’outil prévu à cet effet.
+        Indique à l’utilisateur la ou les catégories associées.
     """)
   String classifyExpense(String expenseSummary);
+
+  @UserMessage("""
+        L’utilisateur souhaite que tu analyses cette dépense : {{expenseSummary}}
+        Il souhaite que tu l'enregistre dans la base de données avec tous les champs pertinents.
+        Tu dispose d'outil pour renseigner une à une les infos puis pour les enregistrées.
+        N'oublie pas de commencer par enregistré la catégorie si elle n'existe pas encore.
+          """)
+  String saveExpense(String expenseSummary);
 
 
   // ============================
   // 3️⃣ VÉRIFICATION ET VALIDATION
   // ============================
   @UserMessage("""
-        Vérifie la conformité de cette dépense selon les règles de l’entreprise :
+        Verifie la conformite de cette depense selon les regles de l’entreprise :
         - type de dépense autorisé,
         - montant raisonnable,
         - justificatif complet.

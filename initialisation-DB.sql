@@ -2,7 +2,8 @@ CREATE DATABASE ticketron;
 USE ticketron;
 CREATE TABLE categories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
+    code CHAR(4) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
     description TEXT
 );
 
@@ -13,14 +14,14 @@ CREATE TABLE expenses (
     total_amount DECIMAL(10,2),
     vat_amount DECIMAL(10,2),
     currency VARCHAR(10) DEFAULT 'EUR',
-    category_id BIGINT,
+    category_code CHAR(4),
     description TEXT,
     payment_method VARCHAR(50),
     image_path VARCHAR(500),
     confidence FLOAT,
     status VARCHAR(20) DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES categories(id)
+    FOREIGN KEY (category_code) REFERENCES categories(code)
 );
 
 CREATE TABLE expense_reports (

@@ -21,7 +21,10 @@ public class Category {
   private Long id;
 
   @Column(nullable = false, unique = true, length = 100)
+  public String code;
+
   public String name;
+
 
   public String description;
 
