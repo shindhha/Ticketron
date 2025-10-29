@@ -1,0 +1,100 @@
+package fr._3il.ticketron.agents;
+
+import fr._3il.ticketron.api.models.Expense;
+import fr._3il.ticketron.api.models.requests.FlexibleExpense;
+import fr._3il.ticketron.api.services.ExpenseService;
+import fr._3il.ticketron.ocr.OcrService;
+import net.sourceforge.tess4j.TesseractException;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+
+@SpringBootTest
+class TicketronTest {
+
+  Ticketron ticketron;
+  @MockitoSpyBean
+  OcrService ocrService;
+
+  @MockitoBean
+  ExpenseService expenseService;
+
+  Expense expense;
+
+
+
+  public TicketronTest(@Autowired Ticketron ticketron) {
+    this.ticketron = ticketron;
+  }
+
+  @BeforeAll
+  static void initAll() {
+    System.setProperty("logging.level.dev.langchain4j", "DEBUG");
+    System.setProperty("logging.level.fr._3il.ticketron", "DEBUG");
+  }
+
+  @BeforeEach
+  void setUp() throws URISyntaxException, TesseractException, IOException {
+    MockitoAnnotations.openMocks(this);
+
+  }
+
+
+
+
+  @Test
+  void anaylyseExpenseImg() throws TesseractException, IOException {
+    // GIVEN an image path
+    String path = getClass().getResource("/factures/f1.jpg").getPath();
+    String response = ticketron.analyseExpenseImg(path);
+    // EXPECTED OCR service is called
+    verify(ocrService).runFile(path);
+    assertEquals("", response);
+  }
+
+
+  @Test
+  void createExpenseObject() {
+    String prompt = "J'ai lu l'image que vous m'avez envoyée. Voici les informations importantes que j'ai extraites :\n" +
+            "\n" +
+            "* Le nom du magasin : MARKET Hauteville\n" +
+            "* La date de la facture : 01/02/2016\n" +
+            "* L'heure de la facture : 18:25:08\n" +
+            "* Les produits achetés :\n" +
+            " + 1 PET 1L COCA COLA L (1.00 €)\n" +
+            " + PALMITO LU (1.42 €)\n" +
+            "* Le total à payer : 2,50 €\n" +
+            "* La monnaie reçue : -0,08 €\n" +
+            "\n" +
+            "Ces informations devraient vous aider à comprendre la situation. Si vous avez d'autres questions ou besoin de plus de détails, n'hésitez pas à me les demander !";
+
+    FlexibleExpense expense = ticketron.createExpenseObject(prompt);
+
+    assertNotNull(expense);
+    assertEquals("MARKET Hauteville", expense.merchant);
+    assertEquals("2,50", expense.totalAmount);
+    assertEquals("18:25:08", expense.hour);
+    assertEquals("01/02/2016", expense.date);
+    assertNotNull(expense.categorie);
+    assertNotNull(expense.description);
+
+  }
+
+
+
+
+
+}

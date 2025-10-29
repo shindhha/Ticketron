@@ -1,6 +1,6 @@
 package fr._3il.ticketron.api.controllers;
 
-import fr._3il.ticketron.Ticketron;
+import fr._3il.ticketron.agents.Ticketron;
 import fr._3il.ticketron.api.models.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@RestController
 public class PromptController {
 
 
@@ -21,6 +20,9 @@ public class PromptController {
     this.ticketron = ticketron;
   }
   @PostMapping("/chat")
+  /**
+   *
+   */
   public String processPrompt(@ModelAttribute Prompt prompt) throws IOException {
     if (prompt.files == null || prompt.files.length == 0) {
       throw new IllegalArgumentException("Aucun fichier envoyé.");
@@ -34,7 +36,6 @@ public class PromptController {
       Path filePath = uploadDir.resolve(fileName);
       file.transferTo(filePath.toFile());
 
-      ticketron.processReceiptWithInstruction(filePath.toString(), prompt.instructions);
     }
     return "Tickets reçus et en cours d'analyse.";
   }

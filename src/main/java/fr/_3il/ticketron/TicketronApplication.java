@@ -1,13 +1,10 @@
 package fr._3il.ticketron;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
-import dev.langchain4j.service.AiServices;
-import fr._3il.ticketron.api.models.Expense;
-import fr._3il.ticketron.api.services.ExpenseService;
-import fr._3il.ticketron.ocr.ImagePreprocessor;
+import fr._3il.ticketron.agents.ExpenseInterpreter;
+import fr._3il.ticketron.agents.Ticketron;
 import fr._3il.ticketron.ocr.OcrService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -32,15 +29,19 @@ public class TicketronApplication {
     return chatModel;
 
   }
-
   @Bean
   public Ticketron ticketron(@Autowired ChatModel chatModel,
-                             @Autowired OcrService ocrService,
-                             @Autowired ExpenseService es,
-                             @Autowired Expense.ExpenseBuilder eb) throws URISyntaxException {
-    return AiServices.builder(Ticketron.class)
+                             @Autowired OcrService ocrService) throws URISyntaxException {
+    return AgenticServices.agentBuilder(Ticketron.class)
             .chatModel(chatModel)
-            .tools(ocrService, es, eb)
+            .tools(ocrService)
+            .build();
+  }
+  @Bean
+  public ExpenseInterpreter expenseExtractor(@Autowired ChatModel chatModel,
+                                             @Autowired  OcrService ocr) {
+    return AgenticServices.agentBuilder(ExpenseInterpreter.class)
+            .chatModel(chatModel)
             .build();
   }
 
