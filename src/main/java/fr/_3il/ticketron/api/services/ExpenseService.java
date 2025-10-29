@@ -17,6 +17,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ExpenseService {
@@ -55,41 +58,74 @@ public class ExpenseService {
     return saved;
 
   }
-  @Tool(value = "Construit une depense Expense à partir d'une depense flexible FlexibleExpense.")
-  public Expense buildExpense(FlexibleExpense flexibleExpense) {
-    // --- Date parsing ---
-    LocalDate date = null;
-    LocalDateTime dateTime = null;
+  // Essaye plusieurs formats de date possibles
+  private static final DateTimeFormatter[] DATE_FORMATS = new DateTimeFormatter[]{
+          DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+          DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+          DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+          DateTimeFormatter.ofPattern("dd/MM/yy")
+  };
 
-    // Essayons de parser la date
-    try {
-      if (flexibleExpense.hour != null && !flexibleExpense.hour.isBlank()) {
-        // Combine date + heure
-        String dateTimeStr = flexibleExpense.date + " " + flexibleExpense.hour;
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        dateTime = LocalDateTime.parse(dateTimeStr, dtf);
-        date = dateTime.toLocalDate();
-      } else {
-        DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        date = LocalDate.parse(flexibleExpense.date, df);
-      }
-    } catch (DateTimeParseException e) {
-      System.err.println("⚠️ Erreur de parsing de la date : " + flexibleExpense.date + " " + flexibleExpense.hour);
-      e.printStackTrace();
+  public Expense fromFlexible(FlexibleExpense f) {
+    Expense e = new Expense();
+    if (f.merchant != null) {
+      e.merchant = normalizeMerchant(f.merchant);
     }
+    e.date = parseDate(f.date);
+    e.totalAmount = parseAmount(f.totalAmount);
+    e.currency = normalizeCurrency(f.currency);
+    e.description = cleanText(f.description);
+    e.categoryCode = null;
 
-    // --- Conversion sécurisée des montants ---
-    BigDecimal totalAmount = safeBigDecimal(flexibleExpense.totalAmount);
+    return e;
+  }
 
-    // --- Construction de l'objet ---
-    Expense expense = new Expense();
+  private LocalDate parseDate(String raw) {
+    if (raw == null || raw.isBlank()) return null;
+    String normalized = raw.trim().replaceAll("[^0-9/\\-]", "");
+    for (DateTimeFormatter fmt : DATE_FORMATS) {
+      try {
+        return LocalDate.parse(normalized, fmt);
+      } catch (DateTimeParseException ignored) {}
+    }
+    return null;
+  }
 
+  private BigDecimal parseAmount(String raw) {
+    if (raw == null || raw.isBlank()) return null;
+    // Exemple : "2.50", "2,50€", "Total 2.42 EUR"
+    Matcher m = Pattern.compile("(\\d+[.,]?\\d*)").matcher(raw);
+    if (m.find()) {
+      String num = m.group(1).replace(",", ".");
+      try {
+        return new BigDecimal(num);
+      } catch (NumberFormatException ignored) {}
+    }
+    return null;
+  }
 
-    return expense;
+  private String normalizeCurrency(String c) {
+    if (c == null) return "EUR";
+    String s = c.trim().toUpperCase(Locale.ROOT);
+    if (s.contains("€") || s.contains("EUR")) return "EUR";
+    if (s.contains("USD") || s.contains("$")) return "USD";
+    return "EUR"; // défaut
+  }
+
+  private String normalizeMerchant(String merchant) {
+    return merchant.trim()
+            .replaceAll("[^A-Za-zÀ-ÿ0-9 '&\\-]", "")
+            .replaceAll("\\s+", " ")
+            .toUpperCase(Locale.ROOT);
+  }
+
+  private String cleanText(String text) {
+    if (text == null) return null;
+    return text.trim().replaceAll("\\s+", " ");
   }
 
   // Méthode utilitaire pour parser les montants sans planter
-  private static BigDecimal safeBigDecimal(String value) {
+  private BigDecimal safeBigDecimal(String value) {
     try {
       if (value == null || value.isBlank()) return null;
       return new BigDecimal(value.replace(",", "."));

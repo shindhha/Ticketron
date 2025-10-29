@@ -36,19 +36,9 @@ class ExpenseExtractorTest {
     assertNotNull(expense.currency);
     assertNotNull(expense.description);
     assertNotNull(expense.hour);
-    assertNotNull(expense.categorie.code);
-    assertNotNull(expense.categorie.name);
-    assertNotNull(expense.categorie.description);
   }
 
-  @Test
-  void extractFlexibleExpenseThenTransformToExpense() throws URISyntaxException, TesseractException, IOException {
-    OcrService ocrService = new OcrService();
-    // GIVEN an image translated by OCR
-    String imgText = ocrService.runFile(getClass().getResource("/factures/f1.jpg").getPath());
-    FlexibleExpense expense = extractor.extractExpense(imgText);
-    expenseService.buildExpense(expense);
-  }
+
 
 
 

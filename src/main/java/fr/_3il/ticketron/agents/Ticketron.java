@@ -37,9 +37,16 @@ public interface Ticketron {
         
         Réponds uniquement avec un JSON valide. N'écris pas d'introduction ni de résumé.
     """)
-  FlexibleExpense createExpenseObject(String description);
+  FlexibleExpense createFlexibleExpenseObject(String description);
 
-
+  @UserMessage("""
+          À partir de la description suivante d'une dépense extraite d'un ticket, crée un objet JSON FlexibleExpense.
+        Remplis tous les champs possibles (merchant, date, totalAmount, currency, description).
+        Voici la description : {{description}}
+        
+        Réponds uniquement avec un JSON valide. N'écris pas d'introduction ni de résumé.
+    """)
+  FlexibleExpense createExpenseObject(FlexibleExpense description);
 
 
 }

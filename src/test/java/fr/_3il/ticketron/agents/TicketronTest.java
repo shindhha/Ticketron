@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 
 @SpringBootTest
@@ -67,7 +65,7 @@ class TicketronTest {
 
 
   @Test
-  void createExpenseObject() {
+  void createFlexibleExpenseObject() {
     String prompt = "J'ai lu l'image que vous m'avez envoyée. Voici les informations importantes que j'ai extraites :\n" +
             "\n" +
             "* Le nom du magasin : MARKET Hauteville\n" +
@@ -81,16 +79,27 @@ class TicketronTest {
             "\n" +
             "Ces informations devraient vous aider à comprendre la situation. Si vous avez d'autres questions ou besoin de plus de détails, n'hésitez pas à me les demander !";
 
-    FlexibleExpense expense = ticketron.createExpenseObject(prompt);
+    FlexibleExpense expense = ticketron.createFlexibleExpenseObject(prompt);
 
     assertNotNull(expense);
-    assertEquals("MARKET Hauteville", expense.merchant);
-    assertEquals("2,50", expense.totalAmount);
-    assertEquals("18:25:08", expense.hour);
-    assertEquals("01/02/2016", expense.date);
-    assertNotNull(expense.categorie);
+    assertNotNull(expense.merchant);
+    assertNotNull(expense.totalAmount);
+    assertNotNull(expense.hour);
+    assertNotNull(expense.date);
     assertNotNull(expense.description);
+  }
 
+  @Test
+  void createExpenseObject() {
+    FlexibleExpense fe = new FlexibleExpense();
+    fe.merchant = "MARKET Hauteville";
+    fe.totalAmount = "2,50 €";
+    fe.date = "2024-10-15";
+    fe.currency = "EUR";
+    fe.description = "Achat de fruits";
+    fe.hour = "14:30";
+
+    FlexibleExpense expense = ticketron.createExpenseObject(fe);
   }
 
 

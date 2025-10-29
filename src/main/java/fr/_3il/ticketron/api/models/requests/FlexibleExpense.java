@@ -10,6 +10,5 @@ public class FlexibleExpense {
 
   public String description;
   public String hour;
-  public FlexibleCategory categorie;
 
 }
