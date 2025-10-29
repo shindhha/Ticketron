@@ -1,10 +1,12 @@
 package fr._3il.ticketron;
 
 import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import fr._3il.ticketron.agents.ExpenseInterpreter;
 import fr._3il.ticketron.agents.Ticketron;
+import fr._3il.ticketron.api.services.ExpenseService;
 import fr._3il.ticketron.ocr.OcrService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -31,10 +33,12 @@ public class TicketronApplication {
   }
   @Bean
   public Ticketron ticketron(@Autowired ChatModel chatModel,
-                             @Autowired OcrService ocrService) throws URISyntaxException {
+                             @Autowired OcrService ocrService,
+                             @Autowired ExpenseService expenseService) throws URISyntaxException {
     return AgenticServices.agentBuilder(Ticketron.class)
+            .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
             .chatModel(chatModel)
-            .tools(ocrService)
+            .tools(ocrService, expenseService)
             .build();
   }
   @Bean

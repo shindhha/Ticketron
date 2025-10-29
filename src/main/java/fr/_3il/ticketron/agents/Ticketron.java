@@ -1,8 +1,12 @@
 package fr._3il.ticketron.agents;
 
 import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
+import fr._3il.ticketron.api.models.Category;
+import fr._3il.ticketron.api.models.Expense;
+import fr._3il.ticketron.api.models.requests.FlexibleCategory;
 import fr._3il.ticketron.api.models.requests.FlexibleExpense;
 
 /**
@@ -40,13 +44,32 @@ public interface Ticketron {
   FlexibleExpense createFlexibleExpenseObject(String description);
 
   @UserMessage("""
-          À partir de la description suivante d'une dépense extraite d'un ticket, crée un objet JSON FlexibleExpense.
-        Remplis tous les champs possibles (merchant, date, totalAmount, currency, description).
+        À partir de la description suivante d'une dépense extraite d'un ticket, crée un objet JSON FlexibleCategory.
+        Remplis tous les champs selons les contraintes suivantes :
+        - code : 4 lettres majuscules.
+        - name : nom de la catégorie.
+        - description : description de la catégorie.
+        
+        Avant de créer la catégorie tu doit verifier en base de données si une catégorie similaire n'existe pas déjà.
         Voici la description : {{description}}
         
         Réponds uniquement avec un JSON valide. N'écris pas d'introduction ni de résumé.
     """)
-  FlexibleExpense createExpenseObject(FlexibleExpense description);
+  FlexibleCategory createFlexibleCategory(String description);
+
+  @UserMessage("""
+    À partir de la description suivante d'une dépense extraite d'un ticket, crée un objet JSON Category complet.
+    Si une catégorie similaire existe déjà dans la base de données, récupère-la avec l'outil getCategories().
+    Sinon, crée-en une nouvelle avec l'outil fromFlexible().
+
+    Une fois la catégorie déterminée, retourne uniquement un JSON conforme à la structure Category.
+    N’écris ni texte, ni explication, ni description des appels d’outils.
+    Si tu obtiens déjà un Category, retourne-le directement sans rappeler d’outil.
+
+    Voici la description : {{flexibleCategory}}
+""")
+  Category getCategory(@MemoryId FlexibleCategory flexibleCategory);
+
 
 
 }

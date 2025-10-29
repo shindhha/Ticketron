@@ -6,6 +6,5 @@ public class FlexibleCategory {
 
   public String name;
 
-
   public String description;
 }

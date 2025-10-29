@@ -3,8 +3,10 @@ package fr._3il.ticketron.api.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.agent.tool.ToolMemoryId;
 import fr._3il.ticketron.api.models.Category;
 import fr._3il.ticketron.api.models.Expense;
+import fr._3il.ticketron.api.models.requests.FlexibleCategory;
 import fr._3il.ticketron.api.models.requests.FlexibleExpense;
 import fr._3il.ticketron.api.repositories.CategoryRepository;
 import fr._3il.ticketron.api.repositories.ExpenseRepository;
@@ -36,28 +38,18 @@ public class ExpenseService {
     this.categoryRepository = cs;
   }
 
-  @Tool(value = "Enregistre une depense a partir des informations fournies dans le builder.")
+
   public Expense saveExpense(Expense expenseToSave) {
+    categoryRepository.save(expenseToSave.category);
     Expense saved = expenseRepository.save(expenseToSave);
     return saved;
   }
-  @Tool(value = "Retourne la liste de toutes les categories de depenses disponibles.")
+
+  @Tool("Retourne la liste complète des catégories existantes dans la base de données")
   public List<Category> getCategories() {
     return categoryRepository.findAll();
   }
-  @Tool(value = "Ajoute une nouvelle categorie de depense avec un nom et une description.")
-  public Category addCategory(
-          @P("Le code de la catégorie, 4 lettres majuscules.")
-          String code,
-          String name, String description) {
-    Category category = new Category();
-    category.code = code.trim().toUpperCase();
-    category.name = name;
-    category.description = description;
-    Category saved = categoryRepository.save(category);
-    return saved;
 
-  }
   // Essaye plusieurs formats de date possibles
   private static final DateTimeFormatter[] DATE_FORMATS = new DateTimeFormatter[]{
           DateTimeFormatter.ofPattern("dd/MM/yyyy"),
@@ -65,6 +57,14 @@ public class ExpenseService {
           DateTimeFormatter.ofPattern("yyyy-MM-dd"),
           DateTimeFormatter.ofPattern("dd/MM/yy")
   };
+  @Tool("Convertit un FlexibleCategory en Category si aucune catégorie similaire n'existe")
+  public Category fromFlexible(@ToolMemoryId FlexibleCategory flexibleCategory) {
+    Category c = new Category();
+    c.code = flexibleCategory.code != null ? flexibleCategory.code.trim().toUpperCase().substring(0,4) : null;
+    c.name = flexibleCategory.name != null ? flexibleCategory.name.trim() : null;
+    c.description = flexibleCategory.description != null ? flexibleCategory.description.trim() : null;
+    return c;
+  }
 
   public Expense fromFlexible(FlexibleExpense f) {
     Expense e = new Expense();
@@ -75,7 +75,6 @@ public class ExpenseService {
     e.totalAmount = parseAmount(f.totalAmount);
     e.currency = normalizeCurrency(f.currency);
     e.description = cleanText(f.description);
-    e.categoryCode = null;
 
     return e;
   }
