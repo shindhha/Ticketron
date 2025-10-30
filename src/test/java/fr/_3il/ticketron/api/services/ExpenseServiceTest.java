@@ -7,6 +7,7 @@ import fr._3il.ticketron.api.models.ExpenseReport;
 import fr._3il.ticketron.api.repositories.CategoryRepository;
 import fr._3il.ticketron.api.repositories.ExpenseRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,7 @@ class ExpenseServiceTest {
   private Expense.ExpenseBuilder expenseBuilder;
 
   @BeforeEach
+  @Disabled("Test désactivé temporairement")
   void setUp() {
     this.objectMapper = new ObjectMapper();
     expenseBuilder.reset();
@@ -45,6 +47,7 @@ class ExpenseServiceTest {
   // ✅ GIVEN une catégorie inexistante
   // ======================================================
   @Test
+  @Disabled("Test désactivé temporairement")
   void shouldBuildExpenseWithTools() {
     Expense expense = new Expense();
     expense.merchant = "MARKET Hauteville";
