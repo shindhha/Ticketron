@@ -7,21 +7,44 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.awt.image.RescaleOp;
 
+/**
+ * Classe pour le prétraitement d'images de tickets de frais avant OCR.
+ * Contient des méthodes pour conversion en niveaux de gris, amélioration,
+ * redimensionnement et seuillage adaptatif Sauvola.
+ */
 public class ImagePreprocessor {
 
+    /**
+     * Effectue un premier passage de traitement sur l'image du ticket :
+     * conversion en niveaux de gris, agrandissement 2x, et amélioration de la netteté.
+     * @param src image source en couleur
+     * @return image traitée en niveaux de gris et sharpened
+     */
     public BufferedImage receiptPassA(BufferedImage src) {
         BufferedImage g = toGrayscale(src);
         BufferedImage up = upscale2x(g);
         return unsharp(up);
     }
+
+
+
+    /**
+     * Effectue un second passage de traitement sur l'image :
+     * applique receiptPassA, puis ajuste le contraste et applique un seuillage Sauvola.
+     * @param src image source en couleur
+     * @return image binarisée adaptativement avec amélioration de contraste
+     */
     public BufferedImage receiptPassB(BufferedImage src) {
         BufferedImage a = receiptPassA(src);
         BufferedImage boosted = boostContrast(a, 1.2f, -10f);
-        return sauvola(boosted, 31, 0.34); // fenêtre ~31, k ~ 0.34
+        return sauvola(boosted, 31, 0.34); // fenêtre ~31, facteur k ~ 0.34
     }
 
-
-
+    /**
+     * Convertit une image couleur en niveaux de gris.
+     * @param src image source couleur
+     * @return image en niveaux de gris (type BYTE_GRAY)
+     */
     public BufferedImage toGrayscale(BufferedImage src) {
         int w = src.getWidth(), h = src.getHeight();
         BufferedImage gray = new BufferedImage(w, h, BufferedImage.TYPE_BYTE_GRAY);
@@ -31,6 +54,13 @@ public class ImagePreprocessor {
         return gray;
     }
 
+    /**
+     * Augmente le contraste d'une image en niveaux de gris.
+     * @param srcGray image en niveaux de gris source
+     * @param scale facteur multiplicateur de contraste (ex. 1.2f)
+     * @param offset décalage appliqué après mise à l'échelle (ex. -10f)
+     * @return image avec contraste ajusté
+     */
     public BufferedImage boostContrast(BufferedImage srcGray, float scale, float offset) {
         RescaleOp op = new RescaleOp(scale, offset, null);
         BufferedImage dst = new BufferedImage(srcGray.getWidth(), srcGray.getHeight(), srcGray.getType());
@@ -38,6 +68,12 @@ public class ImagePreprocessor {
         return dst;
     }
 
+    /**
+     * Agrandit une image en niveaux de gris d'un facteur 2 en utilisant
+     * l'interpolation bicubique pour lisser.
+     * @param srcGray image en niveaux de gris source
+     * @return image agrandie 2x de largeur et hauteur
+     */
     public BufferedImage upscale2x(BufferedImage srcGray) {
         int w = srcGray.getWidth() * 2, h = srcGray.getHeight() * 2;
         BufferedImage dst = new BufferedImage(w, h, BufferedImage.TYPE_BYTE_GRAY);
@@ -48,6 +84,12 @@ public class ImagePreprocessor {
         return dst;
     }
 
+    /**
+     * Applique un filtre "unsharp mask" pour améliorer la netteté de l'image.
+     * Filtre convolutif avec un noyau qui accentue les contours.
+     * @param srcGray image en niveaux de gris source
+     * @return image avec netteté améliorée
+     */
     public BufferedImage unsharp(BufferedImage srcGray) {
         float[] k = {
                 0, -1,  0,
@@ -60,6 +102,14 @@ public class ImagePreprocessor {
         return dst;
     }
 
+    /**
+     * Applique un seuillage adaptatif selon la méthode de Sauvola
+     * pour binariser l'image en fonction du contraste local.
+     * @param gray image en niveaux de gris source
+     * @param window taille de la fenêtre locale (typiquement une trentaine)
+     * @param k paramètre Sauvola, contrôle la sensibilité locale au contraste (environ 0.34)
+     * @return image binaire (TYPE_BYTE_BINARY)
+     */
     public BufferedImage sauvola(BufferedImage gray, int window, double k) {
         int w = gray.getWidth(), h = gray.getHeight();
         BufferedImage out = new BufferedImage(w,h,BufferedImage.TYPE_BYTE_BINARY);
@@ -94,6 +144,14 @@ public class ImagePreprocessor {
         }
         return out;
     }
+
+    /**
+     * Calcule la somme d'une région rectangulaire donnée dans une matrice intégrale.
+     * @param I matrice intégrale
+     * @param x0, y0 coordonnées du coin supérieur gauche
+     * @param x1, y1 coordonnées du coin inférieur droit
+     * @return somme des valeurs dans la région rectangulaire
+     */
     private long area(long[][] I, int x0,int y0,int x1,int y1){
         return I[y1+1][x1+1]-I[y0][x1+1]-I[y1+1][x0]+I[y0][x0];
     }
