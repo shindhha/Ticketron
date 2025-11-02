@@ -34,34 +34,6 @@ class ExpenseServiceTest {
   private ExpenseParser parser;
 
 
-<<<<<<< HEAD
-  @BeforeEach
-  @Disabled("Test désactivé temporairement")
-  void setUp() {
-    this.objectMapper = new ObjectMapper();
-    expenseBuilder.reset();
-  }
-
-  // ======================================================
-  // ✅ GIVEN une catégorie inexistante
-  // ======================================================
-  @Test
-  @Disabled("Test désactivé temporairement")
-  void shouldBuildExpenseWithTools() {
-    Expense expense = new Expense();
-    expense.merchant = "MARKET Hauteville";
-    expense.date = LocalDate.of(2016, 2, 1);
-    expense.totalAmount = new BigDecimal("2.50");
-    expense.vatAmount = BigDecimal.ZERO;
-    expense.currency = "EUR";
-    expense.categoryCode = "ALIM";
-    expense.paymentMethod = "Espèces";
-    expense.description = "Ticket de caisse du supermarché";
-    expense.confidence = 1.0f;
-=======
-
->>>>>>> LinkLLMBD
-
 
     @Test
     void testSaveExpense_success() {
