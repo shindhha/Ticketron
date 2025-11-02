@@ -3,10 +3,8 @@ package fr._3il.ticketron.agents;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
-import dev.langchain4j.service.V;
-import fr._3il.ticketron.api.models.requests.ExpenseCandidate;
 
-public interface Categoriser {
+public interface CategoriserAgent {
 
   @Agent(value = "Specialized agent in expense categorisation", outputName = "expense")
   @SystemMessage("""

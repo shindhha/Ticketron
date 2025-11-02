@@ -1,8 +1,6 @@
 package fr._3il.ticketron.agents;
 
 import dev.langchain4j.agentic.Agent;
-import dev.langchain4j.service.SystemMessage;
-import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
 /**
@@ -13,7 +11,7 @@ import dev.langchain4j.service.V;
  * validation et enregistrement sans que l’utilisateur n’ait à formater les données.
  */
 
-public interface Ticketron {
+public interface SupervisorAgent {
 
 
 

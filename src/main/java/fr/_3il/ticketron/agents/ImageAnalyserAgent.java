@@ -4,7 +4,7 @@ import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 
-public interface ExpenseInterpreter {
+public interface ImageAnalyserAgent {
 
   @Agent(value = "Agent that can transform an image to text by using ocr and give the path", outputName = "expenseJson")
   @UserMessage("""

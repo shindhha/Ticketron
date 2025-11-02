@@ -1,2 +1,43 @@
-package fr._3il.ticketron.agents;public class TicketronAgent {
+package fr._3il.ticketron.agents;
+
+import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
+import dev.langchain4j.agentic.agent.MissingArgumentException;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.service.output.OutputParsingException;
+import fr._3il.ticketron.exceptions.InvalidExpenseException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TicketronAgent {
+
+  private final SupervisorAgent agent;
+
+  public TicketronAgent(@Autowired ChatModel model,
+                        @Autowired CategoriserAgent cat,
+                        @Autowired ImageAnalyserAgent exp,
+                        @Autowired SaveExpenseAgent per) {
+    this.agent = AgenticServices.supervisorBuilder(SupervisorAgent.class)
+            .chatModel(model)
+            .subAgents(exp,cat, per)
+            .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(20))
+            .errorHandler(errorContext -> {
+              Class<?> exceptionClass = errorContext.exception().getClass();
+              if (exceptionClass.equals(InvalidExpenseException.class)) {
+                return ErrorRecoveryResult.retry();
+              }
+              if (exceptionClass.equals(MissingArgumentException.class)
+              || exceptionClass.equals(OutputParsingException.class))
+                return ErrorRecoveryResult.retry();
+              return ErrorRecoveryResult.result("");
+            })
+            .build();
+  }
+
+  public String analyseReceiptImage(String input) {
+    String context = "You goal is to categorise and save the expense on an image, yours agent have all the necessary abilities";
+    return agent.invoke(input, context);
+  }
 }
