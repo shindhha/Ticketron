@@ -23,38 +23,38 @@ import lombok.Builder;
 @Entity
 @Table(name = "categories")
 public class Category {
-    /**
-     * Identifiant unique de la catégorie, généré automatiquement.
-     */
+  /**
+   * Identifiant unique de la catégorie, généré automatiquement.
+   */
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-    /**
-     * Code unique de la catégorie.
-     * Généralement composé de 4 lettres majuscules (ex: REST, TRAN, HEBE).
-     * Ce champ est obligatoire et doit être unique en base de données.
-     */
+  /**
+   * Code unique de la catégorie.
+   * Généralement composé de 4 lettres majuscules (ex: REST, TRAN, HEBE).
+   * Ce champ est obligatoire et doit être unique en base de données.
+   */
 
-  @Column(nullable = false, unique = true, length = 100)
+  @Column(name = "code", columnDefinition = "VARCHAR(100)", unique = true, nullable = false)
   public String code;
-    /**
-     * Nom descriptif de la catégorie.
-     * Exemple : "Restaurant", "Transport", "Hébergement".
-     */
+  /**
+   * Nom descriptif de la catégorie.
+   * Exemple : "Restaurant", "Transport", "Hébergement".
+   */
   public String name;
-    /**
-     * Description détaillée du type de dépenses couvertes par cette catégorie.
-     * Aide l'agent et les utilisateurs à comprendre quand utiliser cette catégorie.
-     */
+  /**
+   * Description détaillée du type de dépenses couvertes par cette catégorie.
+   * Aide l'agent et les utilisateurs à comprendre quand utiliser cette catégorie.
+   */
 
   public String description;
-    /**
-     * Récupère l'identifiant unique de la catégorie.
-     *
-     * @return l'identifiant de la catégorie
-     */
+  /**
+   * Récupère l'identifiant unique de la catégorie.
+   *
+   * @return l'identifiant de la catégorie
+   */
   public Long getId() {
-    return id;
+  return id;
   }
 
 

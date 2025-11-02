@@ -1,17 +1,22 @@
 import { IconButton, InputBase, Paper } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import AddIcon from "@mui/icons-material/Add";
+import { useState, useRef } from "react";
 interface InputBarProps {
-  addHandler?: () => void;
-  sendHandler?: () => void;
+  onFilesSelected?: () => void;
+  onSend?: () => void;
 }
-export function InputBar({ addHandler, sendHandler }: InputBarProps) {
+export function InputBar({ onFilesSelected, onSend }: InputBarProps) {
   return (
     <Paper
       component="form"
       sx={{ p: "2px 4px", display: "flex", alignItems: "center", width: 400 }}
     >
-      <IconButton onClick={addHandler} sx={{ p: "10px" }} aria-label="menu">
+      <IconButton
+        onClick={onFilesSelected}
+        sx={{ p: "10px" }}
+        aria-label="menu"
+      >
         <AddIcon />
       </IconButton>
       <InputBase
@@ -20,11 +25,7 @@ export function InputBar({ addHandler, sendHandler }: InputBarProps) {
         inputProps={{ "aria-label": "Put your instructions here..." }}
       />
 
-      <IconButton
-        onClick={sendHandler}
-        sx={{ p: "10px" }}
-        aria-label="directions"
-      >
+      <IconButton onClick={onSend} sx={{ p: "10px" }} aria-label="directions">
         <SendIcon />
       </IconButton>
     </Paper>

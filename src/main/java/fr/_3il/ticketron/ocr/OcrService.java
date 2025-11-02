@@ -86,7 +86,7 @@ public class OcrService {
      * @throws IOException si le fichier image ne peut être lu
      * @throws TesseractException si l'OCR échoue pendant le traitement
      */
-    @Tool(value = "Execute l'OCR sur une image locale donnee par son chemin absolu et retourne le texte extrait.")
+    @Tool(value = "Performs OCR on a local image given by its absolute path and returns the extracted text.")
     public String runFile(@P("Chemin de l'image") String imagePath) throws IOException, TesseractException {
         BufferedImage img = ImageIO.read(new File(imagePath));
         return tesseract.doOCR(img);

@@ -1,42 +1,50 @@
 package fr._3il.ticketron.api.controllers;
 
-import fr._3il.ticketron.Ticketron;
+<<<<<<< HEAD
 import fr._3il.ticketron.api.models.Prompt;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
+=======
+import fr._3il.ticketron.agents.TicketronAgent;
+>>>>>>> LinkLLMBD
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
-
+@SpringBootTest
 class PromptControllerTest {
 
-  @Mock
-  private Ticketron ticketron;
+  @MockitoBean
+  private TicketronAgent ticketron;
 
-  @InjectMocks
+  @Mock
+  private MultipartFile file;
+
+  @Autowired
   private PromptController controller;
 
-  @BeforeEach
-  void setUp() {
-    MockitoAnnotations.openMocks(this);
+
+
+
+  @Test
+  void testHandleChat_noFile_sent() {
+    when(ticketron.analyseReceiptImage(anyString())).thenReturn("test");
+    ResponseEntity<?> response = controller.handleChat("",null);
+    assertEquals(200, response.getStatusCodeValue());
+
   }
 
-  // ==============================================================
-  // ✅ TEST 1 : Cas nominal - un fichier est envoyé
-  // ==============================================================
   @Test
+<<<<<<< HEAD
   @DisplayName("Should process prompt when a file is provided")
   @Disabled("Test désactivé temporairement")
   void shouldProcessPrompt_WhenFileIsProvided() throws Exception {
@@ -50,24 +58,19 @@ class PromptControllerTest {
     Prompt prompt = new Prompt();
     prompt.files = new MockMultipartFile[]{ file };
     prompt.instructions = "C'était un repas client";
+=======
+  void testHandleChat_emptyFile_sent() {
+    when(file.isEmpty()).thenReturn(true);
+    when(ticketron.analyseReceiptImage(anyString())).thenReturn("test");
+    ResponseEntity<?> response = controller.handleChat("", file);
+>>>>>>> LinkLLMBD
 
-    // WHEN
-    String response = controller.processPrompt(prompt);
+    assertEquals(200, response.getStatusCodeValue());
 
-    // THEN
-    assertNotNull(response);
-    assertTrue(response.contains("Tickets reçus"));
-    verify(ticketron, times(1)).processReceiptWithInstruction(anyString(), eq("C'était un repas client"));
-
-    // Vérifie qu'un fichier temporaire a bien été créé
-    Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"), "ticketron_uploads");
-    assertTrue(Files.exists(tmpDir));
   }
 
-  // ==============================================================
-  // ❌ TEST 2 : Aucun fichier envoyé
-  // ==============================================================
   @Test
+<<<<<<< HEAD
   @DisplayName("Should throw IllegalArgumentException when no file is provided")
   @Disabled("Test désactivé temporairement")
   void shouldThrowException_WhenNoFileProvided() {
@@ -75,36 +78,46 @@ class PromptControllerTest {
     Prompt prompt = new Prompt();
     prompt.files = new MockMultipartFile[0];
     prompt.instructions = "Peu importe";
+=======
+  void testHandleChat_validFile() throws Exception {
+    when(file.isEmpty()).thenReturn(false);
+    when(file.getOriginalFilename()).thenReturn("f1.jpg");
+    when(file.getInputStream()).thenReturn(getClass().getResourceAsStream("/factures/f1.jpg"));
+>>>>>>> LinkLLMBD
 
-    // WHEN + THEN
-    assertThrows(IllegalArgumentException.class, () -> controller.processPrompt(prompt));
+    when(ticketron.analyseReceiptImage(anyString())).thenReturn("OK reçu");
 
-    verify(ticketron, never()).processReceiptWithInstruction(anyString(), anyString());
+    ResponseEntity<?> response = controller.handleChat("", file);
+
+    assertEquals(200, response.getStatusCodeValue());
+    assertEquals("OK reçu", ((Map<?, ?>) response.getBody()).get("text"));
+
+    verify(ticketron, times(1)).analyseReceiptImage(anyString());
   }
 
-  // ==============================================================
-  // ✅ TEST 3 : Plusieurs fichiers
-  // ==============================================================
   @Test
+<<<<<<< HEAD
   @DisplayName("Should process all files when multiple files are provided")
   @Disabled("Test désactivé temporairement")
   void shouldProcessAllFiles_WhenMultipleFilesProvided() throws Exception {
     // GIVEN
     MockMultipartFile file1 = new MockMultipartFile("files", "ticket1.jpg", "image/jpeg", "content1".getBytes());
     MockMultipartFile file2 = new MockMultipartFile("files", "ticket2.jpg", "image/jpeg", "content2".getBytes());
+=======
+  void testHandleChat_exceptionThrown() throws Exception {
+    when(file.isEmpty()).thenReturn(false);
+    when(file.getOriginalFilename()).thenReturn("f1.jpg");
+>>>>>>> LinkLLMBD
 
-    Prompt prompt = new Prompt();
-    prompt.files = new MockMultipartFile[]{ file1, file2 };
-    prompt.instructions = "Frais de déplacement";
+    // Simule une erreur lors du stockage ou du traitement
+    when(file.getInputStream()).thenThrow(new RuntimeException("IO Error"));
 
-    // WHEN
-    String response = controller.processPrompt(prompt);
+    ResponseEntity<?> response = controller.handleChat("",file);
 
-    // THEN
-    assertTrue(response.contains("Tickets reçus"));
-    verify(ticketron, times(2)).processReceiptWithInstruction(anyString(), eq("Frais de déplacement"));
-  }
+    assertEquals(500, response.getStatusCodeValue());
+    assertTrue(((Map<?, ?>) response.getBody()).get("text").toString().contains("Erreur serveur"));
 
+<<<<<<< HEAD
   // ==============================================================
   // ✅ TEST 4 : Gestion d'erreur I/O (simulation d'une erreur de transfert)
   // ==============================================================
@@ -124,5 +137,8 @@ class PromptControllerTest {
     // WHEN + THEN
     assertThrows(IOException.class, () -> controller.processPrompt(prompt));
     verify(ticketron, never()).processReceiptWithInstruction(anyString(), anyString());
+=======
+    verifyNoInteractions(ticketron);
+>>>>>>> LinkLLMBD
   }
 }

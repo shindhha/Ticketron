@@ -1,20 +1,22 @@
 package fr._3il.ticketron;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.observability.api.event.AiServiceStartedEvent;
-import dev.langchain4j.service.AiServices;
-import fr._3il.ticketron.api.models.Expense;
+import fr._3il.ticketron.agents.CategoriserAgent;
+import fr._3il.ticketron.agents.ImageAnalyserAgent;
+import fr._3il.ticketron.agents.SaveExpenseAgent;
+import fr._3il.ticketron.api.services.CategoryService;
 import fr._3il.ticketron.api.services.ExpenseService;
-import fr._3il.ticketron.ocr.ImagePreprocessor;
 import fr._3il.ticketron.ocr.OcrService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.net.URISyntaxException;
 import java.time.Duration;
 
 /**
@@ -46,30 +48,7 @@ public class TicketronApplication {
         return chatModel;
     }
 
-    /**
-     * Crée et configure le bean Ticketron, l'agent LLM principal de l'application.
-     * L'agent est construit avec LangChain4j et dispose d'outils pour :
-     * - Exécuter l'OCR sur des images (OcrService)
-     * - Gérer les dépenses (ExpenseService)
-     * - Construire des objets Expense (ExpenseBuilder)
-     *
-     * @param chatModel modèle de chat Ollama pour les interactions LLM
-     * @param ocrService service OCR pour extraire le texte des images
-     * @param es service de gestion des dépenses
-     * @param eb builder pour créer des objets Expense
-     * @return instance configurée de l'agent Ticketron avec tous ses outils
-     * @throws URISyntaxException si la configuration des chemins de ressources échoue
-     */
-    @Bean
-    public Ticketron ticketron(@Autowired ChatModel chatModel,
-                               @Autowired OcrService ocrService,
-                               @Autowired ExpenseService es,
-                               @Autowired Expense.ExpenseBuilder eb) throws URISyntaxException {
-        return AiServices.builder(Ticketron.class)
-                .chatModel(chatModel)
-                .tools(ocrService, es, eb)
-                .build();
-    }
+
 
     /**
      * Point d'entrée principal de l'application.
@@ -80,5 +59,82 @@ public class TicketronApplication {
     public static void main(String[] args) {
         SpringApplication.run(TicketronApplication.class, args);
     }
+  @Bean
+  public CategoriserAgent categoriser(@Autowired ChatModel chatModel,
+                                      @Autowired CategoryService categoryService) {
+    return AgenticServices.agentBuilder(CategoriserAgent.class)
+            .chatModel(chatModel)
+            .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
+            .tools(categoryService)
+            .build();
+  }
+  /**
+   * Agent permettant de déterminer la catégorie d’une dépense
+   * (ex : Alimentaire, Transport, Logement, etc.).
+   *
+   * Utilise la mémoire de conversation sur les 10 derniers messages
+   * afin de garder le contexte entre les appels sans surcharge.
+   *
+   * @param chatModel modèle LLM utilisé pour générer les décisions
+   * @param categoryService service métier permettant d'accéder à la liste des catégories
+   * @return un agent LangChain4j prêt à catégoriser des données
+   */
+  @Bean
+  public ImageAnalyserAgent expenseExtractor(@Autowired ChatModel chatModel,
+                                             @Autowired OcrService ocrService) {
+    return AgenticServices.agentBuilder(ImageAnalyserAgent.class)
+            .chatModel(chatModel)
+            .beforeAgentInvocation((value) -> {
+              value.inputs().forEach((name, obj) -> {
+                System.out.println("TEST");
+                System.out.println("got : " + name + " : " + obj);
+              });
+            })
+            .tools(ocrService)
+            .build();
+  }
+  /**
+   * Agent responsable de la sauvegarde d’une dépense après analyse.
+   *
+   * Il délègue la persistance au service métier ExpenseService.
+   * outputName("") indique qu’on ne souhaite pas renommer la sortie du LLM.
+   *
+   * @param model modèle LLM utilisé
+   * @param expenseService service métier enregistrant la dépense en base
+   * @return agent spécialisé dans l’enregistrement des dépenses
+   */
+  @Bean
+  public SaveExpenseAgent persister(@Autowired ChatModel model,
+                                    @Autowired ExpenseService expenseService) {
+    return AgenticServices.agentBuilder(SaveExpenseAgent.class)
+            .chatModel(model)
+            .tools(expenseService)
+            .outputName("")
+            .build();
+  }
+
+
+  /**
+   * Configuration CORS permettant au front-end d’accéder à l’API Spring.
+   * Ici, le front local en http://localhost:3000 est autorisé.
+   *
+   * Ajustable si le front change d’URL ou pour un environnement de prod.
+   */
+  @Bean
+  public WebMvcConfigurer corsConfigurer() {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("http://localhost:3000") // ton front Next.js
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+      }
+    };
+  }
+
+
+
 
 }
