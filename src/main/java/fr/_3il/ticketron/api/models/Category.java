@@ -19,8 +19,7 @@ public class Category {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-
-  @Column(nullable = false, unique = true, length = 100)
+  @Column(name = "code", columnDefinition = "VARCHAR(100)", unique = true, nullable = false)
   public String code;
 
   public String name;

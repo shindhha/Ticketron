@@ -29,8 +29,8 @@ public class Expense {
   public BigDecimal totalAmount;
 
   public String currency = "EUR";
-  @ManyToOne
-  public Category category;
+  @Column(name = "category_code" , columnDefinition = "VARCHAR(100)", unique = true, nullable = false)
+  public String categoryCode;
 
   public String description;
 
