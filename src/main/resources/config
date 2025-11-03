@@ -1,2 +1,2 @@
 MODEL_URL=http://localhost:11434
-MODEL_NAME=gpt-oss:20b
+MODEL_NAME=llama3.1:8b

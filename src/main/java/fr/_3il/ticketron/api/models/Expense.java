@@ -1,14 +1,7 @@
 package fr._3il.ticketron.api.models;
 
 import dev.langchain4j.agent.tool.Tool;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -33,23 +26,7 @@ public class Expense {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
-  /**
-   * Nom du commerçant ou de l'établissement où la dépense a été effectuée.
-   */
-  public String merchant;
-  /**
-   * Date de la transaction.
-   */
-  public LocalDate date;
-  /**
-   * Montant total TTC de la dépense.
-   */
-  @Column(name = "total_amount")
-  public BigDecimal totalAmount;
-  /**
-   * Code de la devise (par défaut EUR).
-   */
-  public String currency = "EUR";
+
   /**
   * Code de la catégorie associée à cette dépense.
   * Référence le code d'une catégorie existante en base.
@@ -60,7 +37,8 @@ public class Expense {
   /**
    * Description ou notes supplémentaires sur la dépense.
    */
-  public String description;
+  @Lob
+  public String summary;
   /**
    * Date et heure de création de l'enregistrement en base de données.
    * Valeur générée automatiquement par la base.
