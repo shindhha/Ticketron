@@ -62,7 +62,7 @@ public class PromptController {
           produces = MediaType.APPLICATION_JSON_VALUE
   )
   public ResponseEntity<?> handleChat(@RequestPart("userMessage") String userMessage,
-                                      @RequestPart("file") MultipartFile file) {
+                                      @RequestPart(value = "file", required = false) MultipartFile file) {
     try {
       String prompt = "User asked : " + userMessage;
       if (file != null && !file.isEmpty()) {
@@ -77,7 +77,7 @@ public class PromptController {
 
 
       String iaResponse = ticketron.analyseReceiptImage(prompt);
-
+      System.out.println(iaResponse);
       return ResponseEntity.ok(Map.of("text", iaResponse));
 
     } catch (Exception e) {

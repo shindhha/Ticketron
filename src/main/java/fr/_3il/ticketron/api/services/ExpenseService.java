@@ -37,30 +37,25 @@ public class ExpenseService {
     Save the expense in database.
     
     Usage:
-    - Provide a valid JSON string representing the expense in the parameter `expenseToSave`.
-    - The JSON MUST contain: merchant, date, totalAmount, currency, categoryCode.
-    - Optional fields will be stored if present.
-    
-    Behavior:
-    - Parses the JSON into a ExpenseCandidate.
-    - Persists it to the database (creating category if needed).
-    - Returns the persisted Expense object, including its generated ID.
+    - Provide a description of the expense with all pertinents information
+    - At the end of your description categorise the expense BY adding a category code between <CODE><CODE/> and the description of the 
+    category between <SUM><SUM/>
 """)
   /**
    * Parse une entrée string pour retrouver un object expense et l'enregistrer dans la bd
    * @return la dépense enregistrer
    */
-  public Expense saveExpense(String expenseToSave) {
-    ExpenseCandidate ec = expenseCandidateParser.fromJson(expenseToSave);
-    Expense expense = expenseCandidateParser.toExpense(ec);
+  public String saveExpense(String expenseToSave) {
+    ExpenseCandidate ec = expenseCandidateParser.parseExpense(expenseToSave);
     Category category = new Category();
     category.code = ec.categoryCode;
-    category.name = ec.categoryName;
     category.description = ec.categoryDescription;
     categoryService.saveIfNotExist(category);
-    System.out.println("Trying to save with code : " + expense.categoryCode);
+    Expense expense = new Expense();
+    expense.categoryCode = ec.categoryCode;
+    expense.summary = ec.summary;
     Expense saved = expenseRepository.save(expense);
-    return saved;
+    return expenseToSave;
   }
 
 

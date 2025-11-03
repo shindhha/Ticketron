@@ -1,19 +1,9 @@
 package fr._3il.ticketron.api.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr._3il.ticketron.api.models.Expense;
 import fr._3il.ticketron.api.models.requests.ExpenseCandidate;
-import fr._3il.ticketron.exceptions.InvalidExpenseException;
 import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,78 +21,40 @@ public class ExpenseParser {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
-  // Essaye plusieurs formats de date possibles
-  private static final DateTimeFormatter[] DATE_FORMATS = new DateTimeFormatter[]{
-          DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-          DateTimeFormatter.ofPattern("dd-MM-yyyy"),
-          DateTimeFormatter.ofPattern("yyyy-MM-dd"),
-          DateTimeFormatter.ofPattern("dd/MM/yy")
-  };
-
   /**
    * Converts a JSON string to a FlexibleExpense object.
    *
-   * @param json JSON representation of a FlexibleExpense
+   * @param toParse description of an expense
    * @return FlexibleExpense instance
    */
-  public ExpenseCandidate fromJson(String json) {
-    if (json == null || json.isBlank()) {
-      throw new IllegalArgumentException("Cannot parse FlexibleExpense: JSON input is null or empty");
+  public ExpenseCandidate parseExpense(String toParse) {
+    Pattern patternCode = Pattern.compile("<code[^>]*>([\\s\\S]*?)</code>", Pattern.CASE_INSENSITIVE);
+    Pattern patternDesc = Pattern.compile("<sum[^>]*>([\\s\\S]*?)</sum>", Pattern.CASE_INSENSITIVE);
+
+    Matcher mCode = patternCode.matcher(toParse);
+    Matcher mDesc = patternDesc.matcher(toParse);
+
+    String code = "UNKNOW";
+    String desc = "UNKNOW";
+
+    if (mCode.find()) {
+      String g = mCode.group(1).trim();
+      if (!g.isEmpty()) code = g;
     }
 
-    try {
-      return mapper.readValue(json, ExpenseCandidate.class);
-    } catch (JsonProcessingException e) {
-      throw new IllegalArgumentException("Invalid JSON for FlexibleExpense:\n" + json, e);
+    if (mDesc.find()) {
+      String g = mDesc.group(1).trim();
+      if (!g.isEmpty()) desc = g;
     }
+
+    ExpenseCandidate expense = new ExpenseCandidate();
+    expense.summary = toParse;
+    expense.categoryCode = code;
+    expense.categoryDescription = desc;
+
+    System.out.println("SOUT Description : " + toParse);
+    return expense;
   }
-
-  public Expense toExpense(String s) {
-    ExpenseCandidate ec = fromJson(s);
-    return toExpense(ec);
-  }
-
-  public Expense toExpense(ExpenseCandidate ec) {
-    String empty = ec.getEmptyField();
-    if (!empty.isBlank())
-      throw new InvalidExpenseException("Field : " + empty + " MUST NOT BE EMPTY ");
-    Expense e = new Expense();
-    if (ec.merchant != null) {
-      e.merchant = ec.merchant;
-    }
-    e.date = parseDate(ec.date);
-    e.totalAmount = parseAmount(ec.totalAmount);
-    e.currency = ec.currency;
-    e.description = ec.description;
-    e.categoryCode = ec.categoryCode;
-    return e;
-  }
-
-  public LocalDate parseDate(String raw) {
-    if (raw == null || raw.isBlank()) return null;
-    String normalized = raw.trim().replaceAll("[^0-9/\\-]", "");
-    for (DateTimeFormatter fmt : DATE_FORMATS) {
-      try {
-        return LocalDate.parse(normalized, fmt);
-      } catch (DateTimeParseException ignored) {}
-    }
-    return null;
-  }
-
-  public BigDecimal parseAmount(String raw) {
-    if (raw == null || raw.isBlank()) return null;
-    // Exemple : "2.50", "2,50€", "Total 2.42 EUR"
-    Matcher m = Pattern.compile("(\\d+[.,]?\\d*)").matcher(raw);
-    if (m.find()) {
-      String num = m.group(1).replace(",", ".");
-      try {
-        return new BigDecimal(num);
-      } catch (NumberFormatException ignored) {}
-    }
-    return null;
-  }
-
-
 
 
 

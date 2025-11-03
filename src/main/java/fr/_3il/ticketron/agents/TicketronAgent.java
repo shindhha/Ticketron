@@ -1,12 +1,13 @@
 package fr._3il.ticketron.agents;
 
+import dev.langchain4j.agent.tool.P;
+import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.agent.MissingArgumentException;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.output.OutputParsingException;
-import fr._3il.ticketron.exceptions.InvalidExpenseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,15 +37,19 @@ public class TicketronAgent {
             .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(20))
             .errorHandler(errorContext -> {
               Class<?> exceptionClass = errorContext.exception().getClass();
-              if (exceptionClass.equals(InvalidExpenseException.class)) {
-                return ErrorRecoveryResult.retry();
-              }
               if (exceptionClass.equals(MissingArgumentException.class)
-              || exceptionClass.equals(OutputParsingException.class))
+                      || exceptionClass.equals(OutputParsingException.class))
                 return ErrorRecoveryResult.retry();
               return ErrorRecoveryResult.result("");
             })
             .build();
+  }
+
+  public class SupervisorTools {
+    @Tool("done")
+    public String done(@P("response") String response) {
+      return response; // renvoie tel quel -> sera la valeur retournée par agent.invoke(...)
+    }
   }
   /**
    * Analyse une image de reçu pour extraire les informations de dépense,
@@ -54,7 +59,22 @@ public class TicketronAgent {
    * @return Résultat textuel de l’analyse et de l’opération réalisée
    */
   public String analyseReceiptImage(String input) {
-    String context = "You goal is to categorise and save the expense on an image, yours agent have all the necessary abilities";
-    return agent.invoke(input, context);
+    String context = "You are an orchestrator. Decide whether to call a tool or to finish.\n" +
+            "\n" +
+            "DECISION RULES (strict):\n" +
+            "1) If the user message is small talk / greeting / unrelated to expenses, RETURN:\n" +
+            "   {\"agentName\":\"done\",\"arguments\":{\"response\": \"<brief reply in user's language>\"}}\n" +
+            "2) Do NOT call imageAnalyser$2 if 'imgPath' is null/empty or not a readable local file.\n" +
+            "3) If any tool returns an error (e.g. contains \"ERROR\" or \"Can't read input file!\"), STOP and return 'done' with a short explanation. Do NOT fabricate data.\n" +
+            "4) Do NOT call persistExpense$3 unless you have a structured, validated expense (store/date/amount/items or OCR text). Never invent content.\n" +
+            "5) Answer in the user's language. Output ONLY JSON: {\"agentName\": \"...\", \"arguments\": {...}}.";
+    try {
+      return agent.invoke(input, context);
+    } catch (OutputParsingException e) {
+      e.printStackTrace();
+      return analyseReceiptImage(input);
+    }
+
   }
+
 }

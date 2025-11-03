@@ -11,6 +11,7 @@ import fr._3il.ticketron.api.services.CategoryService;
 import fr._3il.ticketron.api.services.ExpenseService;
 import fr._3il.ticketron.ocr.OcrService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -28,26 +29,6 @@ import java.time.Duration;
 @SpringBootApplication
 public class TicketronApplication {
 
-    /**
-     * Crée et configure le bean ChatModel basé sur Ollama.
-     * Le modèle est configuré avec l'URL et le nom récupérés depuis la configuration,
-     * avec logs activés et timeout de 5 minutes.
-     *
-     * @param envGetter service fournissant les variables d'environnement (URL et nom du modèle)
-     * @return instance configurée de ChatModel pour communiquer avec Ollama
-     */
-    @Bean
-    public ChatModel chatModel(@Autowired EnvGetter envGetter) {
-        ChatModel chatModel = OllamaChatModel.builder()
-                .baseUrl(envGetter.getModelUrl())
-                .modelName(envGetter.getModelName())
-                .logRequests(true)
-                .logResponses(true)
-                .timeout(Duration.ofSeconds(300))
-                .build();
-        return chatModel;
-    }
-
 
 
     /**
@@ -60,11 +41,19 @@ public class TicketronApplication {
         SpringApplication.run(TicketronApplication.class, args);
     }
   @Bean
-  public CategoriserAgent categoriser(@Autowired ChatModel chatModel,
+  public CategoriserAgent categoriser(@Qualifier("ollamaChatModel") ChatModel chatModel,
                                       @Autowired CategoryService categoryService) {
     return AgenticServices.agentBuilder(CategoriserAgent.class)
             .chatModel(chatModel)
             .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
+            .beforeAgentInvocation(agentRequest -> {
+              agentRequest.inputs().forEach((s, o) -> {
+                String message = agentRequest.agentName() + " got : " + s + " with value : " + o;
+                System.out.println(message);
+
+              });
+            })
+
             .tools(categoryService)
             .build();
   }
@@ -80,14 +69,15 @@ public class TicketronApplication {
    * @return un agent LangChain4j prêt à catégoriser des données
    */
   @Bean
-  public ImageAnalyserAgent expenseExtractor(@Autowired ChatModel chatModel,
+  public ImageAnalyserAgent expenseExtractor(@Qualifier("ollamaChatModel")ChatModel chatModel,
                                              @Autowired OcrService ocrService) {
     return AgenticServices.agentBuilder(ImageAnalyserAgent.class)
             .chatModel(chatModel)
-            .beforeAgentInvocation((value) -> {
-              value.inputs().forEach((name, obj) -> {
-                System.out.println("TEST");
-                System.out.println("got : " + name + " : " + obj);
+            .beforeAgentInvocation(agentRequest -> {
+              agentRequest.inputs().forEach((s, o) -> {
+                String message = agentRequest.agentName() + " got : " + s + " with value : " + o;
+                System.out.println(message);
+
               });
             })
             .tools(ocrService)
@@ -104,12 +94,17 @@ public class TicketronApplication {
    * @return agent spécialisé dans l’enregistrement des dépenses
    */
   @Bean
-  public SaveExpenseAgent persister(@Autowired ChatModel model,
+  public SaveExpenseAgent persister(@Qualifier("ollamaChatModel") ChatModel model,
                                     @Autowired ExpenseService expenseService) {
     return AgenticServices.agentBuilder(SaveExpenseAgent.class)
+            .beforeAgentInvocation(agentRequest -> {
+              agentRequest.inputs().forEach((s, o) -> {
+                String message = agentRequest.agentName() + " got : " + s + " with value : " + o;
+                System.out.println(message);
+              });
+            })
             .chatModel(model)
             .tools(expenseService)
-            .outputName("")
             .build();
   }
 

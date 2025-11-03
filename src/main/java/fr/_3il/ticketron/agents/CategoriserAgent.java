@@ -6,7 +6,6 @@ import dev.langchain4j.service.UserMessage;
 
 public interface CategoriserAgent {
 
-  @Agent(value = "Specialized agent in expense categorisation", outputName = "expense")
   @SystemMessage("""
     You are a professional categorization agent.
 
@@ -38,6 +37,7 @@ public interface CategoriserAgent {
       If the description refers to a restaurant meal, return: FOOD
       If the description refers to a taxi ride, return: TRANSPORT
       If no suitable category exists, specify a custom one
+    ALWAYS ESCAPE ALL SENSIBLE CHARACTER
   """)
   @UserMessage("""
     Classify the following expense description into one of the existing categories.
@@ -45,5 +45,6 @@ public interface CategoriserAgent {
     Expense description :
     {{expense}}
   """)
+  @Agent("Categoriser agent that can retrieve categories")
   String findMostSimilarCategory();
 }
