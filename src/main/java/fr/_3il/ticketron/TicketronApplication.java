@@ -5,10 +5,12 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import fr._3il.ticketron.agents.CategoriserAgent;
+import fr._3il.ticketron.agents.GetExpenseAgent;
 import fr._3il.ticketron.agents.ImageAnalyserAgent;
 import fr._3il.ticketron.agents.SaveExpenseAgent;
 import fr._3il.ticketron.api.services.CategoryService;
 import fr._3il.ticketron.api.services.ExpenseService;
+import fr._3il.ticketron.api.services.GetExpenseService;
 import fr._3il.ticketron.ocr.OcrService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -83,7 +85,23 @@ public class TicketronApplication {
             .tools(ocrService)
             .build();
   }
-  /**
+
+    @Bean
+    public GetExpenseAgent getExpenseAgent(@Qualifier("ollamaChatModel") ChatModel model,
+                                           @Autowired GetExpenseService expenseService) {
+        return AgenticServices.agentBuilder(GetExpenseAgent.class)
+                .chatModel(model)
+                .tools(expenseService)
+                .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(5))
+                .beforeAgentInvocation(agentRequest -> {
+                    agentRequest.inputs().forEach((s, o) ->
+                            System.out.println(agentRequest.agentName() + " got : " + s + " with value : " + o));
+                })
+                .build();
+    }
+
+
+    /**
    * Agent responsable de la sauvegarde d’une dépense après analyse.
    *
    * Il délègue la persistance au service métier ExpenseService.

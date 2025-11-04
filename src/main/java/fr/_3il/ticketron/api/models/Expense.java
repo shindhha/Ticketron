@@ -43,9 +43,9 @@ public class Expense {
    * Date et heure de création de l'enregistrement en base de données.
    * Valeur générée automatiquement par la base.
    */
-  @Column(name = "created_at", updatable = false, insertable = false,
-        columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-  private java.time.LocalDateTime createdAt;
+    @Column(name = "created_at", updatable = false, insertable = false,
+          columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private java.time.LocalDateTime createdAt;
   /**
    * Récupère la date et heure de création de l'enregistrement.
    *

@@ -58,7 +58,6 @@ public class ExpenseService {
     return expenseToSave;
   }
 
-
   public List<Expense> expenses() {
     return expenseRepository.findAll();
   }

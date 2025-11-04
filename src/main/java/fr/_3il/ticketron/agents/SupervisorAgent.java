@@ -1,6 +1,7 @@
 package fr._3il.ticketron.agents;
 
 import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.V;
 
 /**
@@ -16,7 +17,7 @@ public interface SupervisorAgent {
 
 
   @Agent
-  String invoke(@V("request") String request, @V("supervisorContext") String supervisorContext);
+  String invoke(@V("request") String request, @V("supervisorContext") String supervisorContext,@MemoryId int memoryId);
 
 
 
