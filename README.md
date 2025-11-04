@@ -72,20 +72,26 @@ Utilisez cette commande pour une exécution plus performante :
 
 ---
 
-### TODO :
-+ [x] Développer l'OCR pour extraire les informations des factures
-+ [x] Intégrer un LLM pour analyser les informations extraites par l'OCR
-+ [ ] Verifier que l'OCR arrive a extraire les informations de plusieurs factures
-+ [X] Permettre au LLM de créer des catégories de dépenses en base et lui permettre de récupéer les existantes
-+ [X] Donner les tools nécessaire au LLM pour transformer des objets JSON en objet JAVA
-+ [X] Permettre au LLM d'enregistrer les objets JAVA dans une base de données avec les repositories
-+ [X] Créer les différentes routes API pour communiquer avec le front
-+ [X] Développer l'interface utilisateurs en react
-+ [ ] Réfléchir et implementer un système minisant les erreurs du LLM
+###  Lancement de l'API
+L’API REST sert de lien entre le **front-end** et le **back-end**.  
+![img.png](images/img1.png)
 
-Et comme un projet n'est que très rarement terminé :
-+ [X] Faire les tests unitaires et d'intégration
-+ [X] Installer checkstyles et autres outils de qualité de code et respecter les normes 
+###  Lancement du FRONT
 
-:D
+#### Pré-requis
+Avant tout, assure-toi d’avoir Node.js et npm installés sur ta machine.
+
+#### Installation des dépendances
+
+Pour installer les dépendances nécessaires, exécute :
+
+    npm install
+
+#### Lancement du front 
+Pour lancer le serveur de développement :
+
+    npm run dev
+
+L’application sera accessible par défaut à l’adresse : http://localhost:3000
+
 
